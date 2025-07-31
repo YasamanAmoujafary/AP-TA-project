@@ -26,3 +26,37 @@ RegisteredUser* MovieRecommender::findUserByName(const string& username) const {
     }
     throw NotFound();
 }
+
+vector<pair<Movie*, float>> MovieRecommender::recommandMoviesByGenre(const string &username,const string &genre)
+{
+    cout << registered_users.size() << endl;
+    cout << movies.size() << endl;
+
+
+    if(username == "")
+    {
+        NonRegisteredUser nonRegisteredUser;
+        return nonRegisteredUser.recommend_by_genre(genre, movies,registered_users);
+
+    }
+    else
+    {
+        RegisteredUser* registeredUser = findUserByName(username);
+        if(registeredUser)
+        {
+            return registeredUser->recommend_by_genre(genre, movies, registered_users);
+        }
+        else
+        {
+            cout << "i m here"<< endl;
+            throw NotFound();
+        }
+    }
+
+}
+
+void MovieRecommender::recommandMoviesByCast(const string &username,const string &cast)
+{
+
+}
+

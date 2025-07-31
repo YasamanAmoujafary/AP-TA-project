@@ -5,8 +5,9 @@ RegisteredUser::RegisteredUser(string _name,vector<Movie*> _watched,const vector
 
 string RegisteredUser::get_name() const {return name;}
 
-void RegisteredUser::recommend_by_genre()  {
+vector<pair<Movie*, float>> RegisteredUser::recommend_by_genre( const string& genre, const vector<Movie*>& movies, const vector<RegisteredUser*>& users){
     cout << "[DEBUG] Personalized genre recommendation not implemented yet.\n";
+    return {};
 }
 
 // Stub for cast recommendation

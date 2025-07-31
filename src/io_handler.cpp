@@ -29,7 +29,7 @@ void IOHandler::parse_movies_file(const string& filename)
 }
 
 
-vector<Movie*> IOHandler::map_titles_to_movies(const vector<string>& titles) const {
+vector<Movie*> IOHandler::map_titles_to_movies(const vector<string>& titles)  {
     vector<Movie*> result;
     const vector<Movie*>& all_movies = movie_recommender->getMovies();
 
@@ -89,4 +89,105 @@ void IOHandler::check_user()
             cout << movies[i]->getName()<<"...."<<movies[i]->getCast()<<"...."<<movies[i]->getDirector()<<"...."<<movies[i]->getGenre()<<"..."<<movies[i]->getIMDb()<<endl;
         }
     }
+}
+
+void IOHandler::runCommandLoop() 
+{
+    string line;
+    while(getline(cin, line))
+    {
+        if(line.empty()) continue;
+        handleCommand(line);
+    }
+}
+
+void IOHandler::handleCommand(const string &line)
+{
+    vector<string> parts = parseCommand(line);
+    string command = parts[0];
+    parts = {parts.begin() + 1, parts.end()};
+    if(command == GENRE_RECOMMANDATION_COMMAND)
+    {
+        vector<pair<Movie*, float>> scored_movies = handleGenreRecommandation(parts);
+        print_genre_recommanded_movies(scored_movies);
+
+    }
+    else if(command == CAST_RECOMMANDATION_COMMAND)
+    {
+        handleCastRecommandation(parts);
+    }
+    else
+    {
+        throw BadRequest();
+    }
+}
+
+vector<string> IOHandler::parseCommand(const string &inputLine)
+{
+    vector<string> parts = split(inputLine, INPUT_COMMAND_DELIM);
+
+    for(string& part : parts)
+    {
+        if(part.front() == QUOTE_DEILM && part.back() == QUOTE_DEILM)
+        {
+            part = part.substr(1, part.size() - 2);
+        }
+    }
+    return parts;
+}
+
+vector<pair<Movie*, float>> IOHandler::handleGenreRecommandation(const vector<string> &parts)
+{
+    string username;
+    string genre;
+    if(parts.size() == 2)
+    {
+        username = parts[0];
+        genre = parts[1];
+        
+    }
+    else if(parts.size() == 1)
+    {
+        username = "";
+        genre = parts[0];
+        
+    }
+    else
+    {
+        throw BadRequest();
+    }
+    return movie_recommender->recommandMoviesByGenre(username, genre);
+}
+
+void IOHandler::handleCastRecommandation(const vector<string> &parts)
+{
+    string username;
+    string cast;
+    if(parts.size() == 2)
+    {
+        username = parts[0];
+        cast = parts[1];
+        
+    }
+    else if(parts.size() == 1)
+    {
+        username = "";
+        cast = parts[0];
+        
+    }
+    else
+    {
+        throw BadRequest();
+    }
+    return movie_recommender->recommandMoviesByCast(username, cast);
+
+}
+
+void IOHandler::print_genre_recommanded_movies(vector<pair<Movie*, float>>& scored_movies)
+{
+    for (int i = 0; i < min(3, (int)scored_movies.size()); ++i) {
+    Movie* m = scored_movies[i].first;
+    cout << (i + 1) << ". " << m->getName() << ": " << m->getDirector()
+         << " (" << m->getIMDb() << ")" << endl;
+}
 }

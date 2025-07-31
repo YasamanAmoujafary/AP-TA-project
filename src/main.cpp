@@ -4,17 +4,10 @@ int main(int argc, char* argv[]) {
     try
     {
         IOHandler handler(argv[1], argv[2]);
-        handler.check_user();
+        handler.runCommandLoop();
         
     } 
-    catch (const NotFound& e) 
-    {
-        cout << e.what() << endl;
-    } catch (const Empty& e) 
-    {
-        cout << e.what() << endl;
-    }
-    catch (const BadRequest& e) {
+   catch (const exception& e) {
         cout << e.what() << endl;
     }
     return 0;

@@ -3,7 +3,8 @@
 
 #include "exceptions.hpp"
 
-vector<string> split(const string& str, char delimiter);
 
+vector<string> split(const string& str, char delimiter);
+ 
 
 #endif
