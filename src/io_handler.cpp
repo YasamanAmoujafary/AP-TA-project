@@ -2,18 +2,18 @@
 
 IOHandler::IOHandler(const string &user_file, const string &movie_file)
 {
-    movie_recommender = new MovieRecommender();
-    parse_movies_file(movie_file);
-    parse_users_file(user_file);
+    movieRecommender = new MovieRecommender();
+    parseMoviesFile(movie_file);
+    parseUsersFile(user_file);
 }
 
-void IOHandler::parse_movies_file(const string& filename) 
+void IOHandler::parseMoviesFile(const string& filename) 
 {
     ifstream file(filename);
     string line;
     getline(file, line);
     while (getline(file, line)) {
-        vector<string> tokens = split(line, ',');
+        vector<string> tokens = split(line, DIFF_TYPE_DELIM);
         if (tokens.size() != 5) {
             throw BadRequest();
         }
@@ -23,15 +23,15 @@ void IOHandler::parse_movies_file(const string& filename)
         string genre = tokens[3];
         int imdb = stoi(tokens[4]);
         Movie* movie = new Movie(name, director, cast, genre, imdb);
-        movie_recommender->addMovie(movie);
+        movieRecommender->addMovie(movie);
     }
     file.close();
 }
 
 
-vector<Movie*> IOHandler::map_titles_to_movies(const vector<string>& titles)  {
+vector<Movie*> IOHandler::mapTitlesToMovies(const vector<string>& titles)  {
     vector<Movie*> result;
-    const vector<Movie*>& all_movies = movie_recommender->getMovies();
+    const vector<Movie*>& all_movies = movieRecommender->getMovies();
 
     for (const string& title : titles) {
         for (Movie* m : all_movies) {
@@ -46,15 +46,14 @@ vector<Movie*> IOHandler::map_titles_to_movies(const vector<string>& titles)  {
 }
 
 
-void IOHandler::parse_users_file(const string &file_name)
+void IOHandler::parseUsersFile(const string &filename)
 {
-    ifstream file(file_name);
+    ifstream file(filename);
     string line;
     getline(file, line);
 
     while(getline(file, line))
     {
-        cout << line <<endl;
         vector<string> tokens = split(line, DIFF_TYPE_DELIM);
         if(tokens.size() != USER_INPUT_PART_SIZE){
            throw BadRequest(); 
@@ -63,33 +62,15 @@ void IOHandler::parse_users_file(const string &file_name)
         vector<string> watched = split(tokens[1], ONE_TYPE_DELIM);
         vector<string> ratings = split(tokens[2], ONE_TYPE_DELIM);
 
-        vector<Movie*> watched_movies = map_titles_to_movies(watched);
+        vector<Movie*> watchedMovies = mapTitlesToMovies(watched);
 
-        RegisteredUser* user = new RegisteredUser(name, watched_movies, ratings);
+        RegisteredUser* user = new RegisteredUser(name, watchedMovies, ratings);
 
-        movie_recommender->addUser(user);
+        movieRecommender->addUser(user);
     }
     file.close();
 }
 
-void IOHandler::check_user()
-{
-    vector<RegisteredUser*>users = movie_recommender->getUsers();
-    // vector<Movie*> movies = movie_recommender->getMovies();
-    cout << users.size()<<endl;
-    for(auto user : users){
-        cout << user->get_name() <<endl;
-        vector<Movie*> movies = user->get_movies();
-        vector<string> ratings = user->get_ratings();
-        cout << ratings.size() <<endl;
-        cout << movies.size() <<endl;
-
-        for (int i=0; i<movies.size(); i++){
-            cout <<ratings[i];
-            cout << movies[i]->getName()<<"...."<<movies[i]->getCast()<<"...."<<movies[i]->getDirector()<<"...."<<movies[i]->getGenre()<<"..."<<movies[i]->getIMDb()<<endl;
-        }
-    }
-}
 
 void IOHandler::runCommandLoop() 
 {
@@ -97,7 +78,14 @@ void IOHandler::runCommandLoop()
     while(getline(cin, line))
     {
         if(line.empty()) continue;
-        handleCommand(line);
+        try
+        {
+
+            handleCommand(line);
+        }
+        catch (const exception& e) {
+            cout << e.what() << endl;
+        }
     }
 }
 
@@ -109,12 +97,14 @@ void IOHandler::handleCommand(const string &line)
     if(command == GENRE_RECOMMANDATION_COMMAND)
     {
         vector<pair<Movie*, float>> scored_movies = handleGenreRecommandation(parts);
-        print_genre_recommanded_movies(scored_movies);
+        printGenreRecommandedMovies(scored_movies);
 
     }
     else if(command == CAST_RECOMMANDATION_COMMAND)
     {
-        handleCastRecommandation(parts);
+        
+        vector<Movie*> cast_movies = handleCastRecommandation(parts);
+        printCastRecommandedMovies(cast_movies);
     }
     else
     {
@@ -124,29 +114,48 @@ void IOHandler::handleCommand(const string &line)
 
 vector<string> IOHandler::parseCommand(const string &inputLine)
 {
-    vector<string> parts = split(inputLine, INPUT_COMMAND_DELIM);
+    vector<string> parts;
+    string current;
+    bool inQuotes = false;
 
-    for(string& part : parts)
-    {
-        if(part.front() == QUOTE_DEILM && part.back() == QUOTE_DEILM)
-        {
-            part = part.substr(1, part.size() - 2);
+    for (char ch : inputLine) {
+        if (ch == QUOTE_DEILM) {
+            inQuotes = !inQuotes;
+            if (!inQuotes && !current.empty()) {
+                parts.push_back(current);
+                current.clear();
+            }
+        }
+        else if (ch == INPUT_COMMAND_DELIM && !inQuotes) {
+            if (!current.empty()) {
+                parts.push_back(current);
+                current.clear();
+            }
+        }
+        else {
+            current += ch;
         }
     }
+
+    if (!current.empty()) {
+        parts.push_back(current);
+    }
+
     return parts;
 }
+
 
 vector<pair<Movie*, float>> IOHandler::handleGenreRecommandation(const vector<string> &parts)
 {
     string username;
     string genre;
-    if(parts.size() == 2)
+    if(parts.size() == REGISTER_USER_PART_SIZE)
     {
         username = parts[0];
         genre = parts[1];
         
     }
-    else if(parts.size() == 1)
+    else if(parts.size() == NON_REGISTER_USER_PART_SIZE)
     {
         username = "";
         genre = parts[0];
@@ -156,20 +165,20 @@ vector<pair<Movie*, float>> IOHandler::handleGenreRecommandation(const vector<st
     {
         throw BadRequest();
     }
-    return movie_recommender->recommandMoviesByGenre(username, genre);
+    return movieRecommender->recommandMoviesByGenre(username, genre);
 }
 
-void IOHandler::handleCastRecommandation(const vector<string> &parts)
+vector<Movie*> IOHandler::handleCastRecommandation(const vector<string> &parts)
 {
     string username;
     string cast;
-    if(parts.size() == 2)
+    if(parts.size() == REGISTER_USER_PART_SIZE)
     {
         username = parts[0];
         cast = parts[1];
         
     }
-    else if(parts.size() == 1)
+    else if(parts.size() == NON_REGISTER_USER_PART_SIZE)
     {
         username = "";
         cast = parts[0];
@@ -177,17 +186,27 @@ void IOHandler::handleCastRecommandation(const vector<string> &parts)
     }
     else
     {
+
         throw BadRequest();
     }
-    return movie_recommender->recommandMoviesByCast(username, cast);
+    return movieRecommender->recommandMoviesByCast(username, cast);
 
 }
 
-void IOHandler::print_genre_recommanded_movies(vector<pair<Movie*, float>>& scored_movies)
+void IOHandler::printGenreRecommandedMovies(vector<pair<Movie*, float>>& scoredMovies)
 {
-    for (int i = 0; i < min(3, (int)scored_movies.size()); ++i) {
-    Movie* m = scored_movies[i].first;
+    for (int i = 0; i < min(MAXIMUM_GENRE_RECOMMANDED_MOVIES, (int)scoredMovies.size()); ++i) {
+    Movie* m = scoredMovies[i].first;
+    cout << (i + 1) << ". " << m->getName() << ": " << m->getDirector()
+         << " (" << m->getIMDb() << ")" <<endl;
+    }
+}
+
+void IOHandler::printCastRecommandedMovies(vector<Movie*>& castMovies)
+{
+    for (int i = 0; i < min(MAXIMUM_CAST_RECOMMANDED_MOVIES, (int)castMovies.size()); ++i) {
+    Movie* m = castMovies[i];
     cout << (i + 1) << ". " << m->getName() << ": " << m->getDirector()
          << " (" << m->getIMDb() << ")" << endl;
-}
+    }
 }

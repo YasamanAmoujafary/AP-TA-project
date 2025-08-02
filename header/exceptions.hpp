@@ -24,4 +24,12 @@ public:
     }
 };
 
+class NoSuitableMovie : public exception {
+public:
+    const char* what() const noexcept override {
+        return NOSUITABLEMOVIE.c_str();
+    }
+};
+
+
 #endif

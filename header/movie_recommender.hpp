@@ -15,12 +15,12 @@ public:
 
     RegisteredUser* findUserByName(const string& username) const;
     vector<pair<Movie*, float>> recommandMoviesByGenre(const string &username,const string &genre);
-    void recommandMoviesByCast(const string &username,const string &cast);
+    vector<Movie*> recommandMoviesByCast(const string &username,const string &cast);
 
     
 
 private:
-    vector<RegisteredUser*> registered_users;
+    vector<RegisteredUser*> registeredUsers;
     vector<Movie*> movies;
 };
 

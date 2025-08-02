@@ -1,0 +1,7 @@
+genre_recommandation "Drama"
+genre_recommandation "kourosh" "Comedy"
+cast_recommandation "kourosh" "Tom Hanks"
+genre_recommandation "kourosh" "Comedy"
+cast_recommandation "Scarlett Johansson"
+genre_recommandation "Drama"
+genre_recommandation "kourosh" "Comedyy"

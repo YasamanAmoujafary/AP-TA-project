@@ -7,11 +7,10 @@ class NonRegisteredUser : public User
 {
 public:
     NonRegisteredUser();
-    vector<pair<Movie*, float>> recommend_by_genre( const string& genre, const vector<Movie*>& movies, const vector<RegisteredUser*>& users);
-    void recommend_by_cast();
-    float calculate_movie_score(const string &genre,const Movie* movie, const vector<RegisteredUser*>& users);
-    int count_ratings(const string &type, const Movie* movie, const vector<RegisteredUser*>& users);
-    void sort_scored_movies(vector<pair<Movie*, float>>& scored);
+    vector<pair<Movie*, float>> recommendByGenre(const string& genre, const vector<Movie*>& movies, const vector<RegisteredUser*>& users);
+    vector<Movie*> recommendByCast(const string& cast, const vector<Movie*>& movies);
+    float calculateMovieScore(const string &genre,const Movie* movie, const vector<RegisteredUser*>& users);
+    int countRatings(const string &type, const Movie* movie, const vector<RegisteredUser*>& users);
 };
 
 

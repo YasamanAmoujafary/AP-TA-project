@@ -3,7 +3,7 @@
 MovieRecommender::MovieRecommender() {}
 
 void MovieRecommender::addUser(RegisteredUser* user) {
-    registered_users.push_back(user);
+    registeredUsers.push_back(user);
 }
 
 void MovieRecommender::addMovie(Movie* movie) {
@@ -11,7 +11,7 @@ void MovieRecommender::addMovie(Movie* movie) {
 }
 
 const vector<RegisteredUser*>& MovieRecommender::getUsers(){
-    return registered_users;
+    return registeredUsers;
 }
 
 const vector<Movie*>& MovieRecommender::getMovies(){
@@ -19,7 +19,7 @@ const vector<Movie*>& MovieRecommender::getMovies(){
 }
 
 RegisteredUser* MovieRecommender::findUserByName(const string& username) const {
-    for (RegisteredUser* user : registered_users) {
+    for (RegisteredUser* user : registeredUsers) {
         if (user && user->get_name() == username) {
             return user;
         }
@@ -29,14 +29,10 @@ RegisteredUser* MovieRecommender::findUserByName(const string& username) const {
 
 vector<pair<Movie*, float>> MovieRecommender::recommandMoviesByGenre(const string &username,const string &genre)
 {
-    cout << registered_users.size() << endl;
-    cout << movies.size() << endl;
-
-
     if(username == "")
     {
         NonRegisteredUser nonRegisteredUser;
-        return nonRegisteredUser.recommend_by_genre(genre, movies,registered_users);
+        return nonRegisteredUser.recommendByGenre(genre, movies,registeredUsers);
 
     }
     else
@@ -44,19 +40,35 @@ vector<pair<Movie*, float>> MovieRecommender::recommandMoviesByGenre(const strin
         RegisteredUser* registeredUser = findUserByName(username);
         if(registeredUser)
         {
-            return registeredUser->recommend_by_genre(genre, movies, registered_users);
+            return registeredUser->recommendByGenre(genre, movies, registeredUsers);
         }
         else
         {
-            cout << "i m here"<< endl;
             throw NotFound();
         }
     }
 
 }
 
-void MovieRecommender::recommandMoviesByCast(const string &username,const string &cast)
+vector<Movie*> MovieRecommender::recommandMoviesByCast(const string &username,const string &cast)
 {
+    if(username == "")
+    {
+        NonRegisteredUser nonRegisteredUser;
+        return nonRegisteredUser.recommendByCast(cast, movies);
 
+    }
+    else
+    {
+        RegisteredUser* registeredUser = findUserByName(username);
+        if(registeredUser)
+        {
+            return registeredUser->recommendByCast(cast, movies);
+        }
+        else
+        {
+            throw NotFound();
+        }
+    }
 }
 
